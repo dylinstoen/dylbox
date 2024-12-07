@@ -18,7 +18,6 @@ public class UnitySocketManager : MonoBehaviour
 	}
 	private void Start()
 	{
-		roomCodeText.text = "Hello";
 		InitializeSocket("http://localhost:3003");
 	}
 
@@ -37,12 +36,22 @@ public class UnitySocketManager : MonoBehaviour
 			CreateRoom();
 		};
 
+		socket.On("ROOM_EXISTS", response =>
+		{
+			var data = response.GetValue<Dictionary<string, string>>();
+			if (data.TryGetValue("roomCode", out string code))
+			{
+				Debug.Log($"Room already exist with code: {code}");
+				UnityThread.executeInUpdate(() => {
+					UpdateRoomCodeText(code);
+				});
+
+			}
+		});
 		// Room created event
 		socket.On("ROOM_CREATED", response =>
 		{
 			var data = response.GetValue<Dictionary<string, string>>();
-			data.TryGetValue("roomCode", out string roomCode);
-			Debug.Log($"Room created with code: {roomCode}");
 			if (data.TryGetValue("roomCode", out string code))
 			{
 				Debug.Log($"Room created with code: {code}");
